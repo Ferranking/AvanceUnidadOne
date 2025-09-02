@@ -2,13 +2,15 @@
 Módulo que implementa un árbol binario con versiones recursivas e iterativas.
 """
 
+from collections import deque
 from Nodo import Nodo
+
 
 class ArbolBinario:
     def __init__(self):
         self.raiz = None
 
-    # OPERACIONES BÁSICAS - Ambas versiones
+    # OPERACIONES BÁSICAS
     def es_vacio(self):
         """Versión iterativa (aunque es tan simple que no hay diferencia)"""
         return self.raiz is None
@@ -90,12 +92,16 @@ class ArbolBinario:
     def es_hoja_recursivo(self, valor):
         """Versión recursiva para verificar si un nodo es hoja"""
         nodo = self._buscar_nodo_recursivo(self.raiz, valor)
-        return nodo.es_hoja() if nodo else False
+        if nodo is None:
+            return False
+        return nodo.get_hijo_izquierdo() is None and nodo.get_hijo_derecho() is None
 
     def es_hoja_iterativo(self, valor):
         """Versión iterativa para verificar si un nodo es hoja"""
         nodo = self._buscar_nodo_iterativo(valor)
-        return nodo.es_hoja() if nodo else False
+        if nodo is None:
+            return False
+        return nodo.get_hijo_izquierdo() is None and nodo.get_hijo_derecho() is None
 
     def _buscar_nodo_recursivo(self, nodo_actual, valor):
         """Búsqueda recursiva de nodo (retorna el nodo, no boolean)"""
@@ -123,6 +129,89 @@ class ArbolBinario:
                 actual = actual.get_hijo_derecho()
                 
         return None
+
+    # ALTURA - Ambas versiones
+    def altura_recursivo(self):
+        """Versión recursiva para calcular la altura del árbol"""
+        return self._altura_recursivo(self.raiz)
+
+    def _altura_recursivo(self, nodo_actual):
+        if nodo_actual is None:
+            return 0
+        altura_izq = self._altura_recursivo(nodo_actual.get_hijo_izquierdo())
+        altura_der = self._altura_recursivo(nodo_actual.get_hijo_derecho())
+        return 1 + max(altura_izq, altura_der)
+
+    def altura_iterativo(self):
+        """Versión iterativa para calcular la altura del árbol usando BFS"""
+        if self.es_vacio():
+            return 0
+            
+        altura = 0
+        cola = deque([self.raiz])
+        
+        while cola:
+            nivel_size = len(cola)
+            for _ in range(nivel_size):
+                nodo_actual = cola.popleft()
+                if nodo_actual.get_hijo_izquierdo() is not None:
+                    cola.append(nodo_actual.get_hijo_izquierdo())
+                if nodo_actual.get_hijo_derecho() is not None:
+                    cola.append(nodo_actual.get_hijo_derecho())
+            altura += 1
+            
+        return altura
+
+    # CANTIDAD DE NODOS - Ambas versiones
+    def cantidad_nodos_recursivo(self):
+        """Versión recursiva para contar la cantidad de nodos"""
+        return self._cantidad_nodos_recursivo(self.raiz)
+
+    def _cantidad_nodos_recursivo(self, nodo_actual):
+        if nodo_actual is None:
+            return 0
+        return (1 + 
+                self._cantidad_nodos_recursivo(nodo_actual.get_hijo_izquierdo()) + 
+                self._cantidad_nodos_recursivo(nodo_actual.get_hijo_derecho()))
+
+    def cantidad_nodos_iterativo(self):
+        """Versión iterativa para contar la cantidad de nodos usando BFS"""
+        if self.es_vacio():
+            return 0
+            
+        contador = 0
+        cola = deque([self.raiz])
+        
+        while cola:
+            nodo_actual = cola.popleft()
+            contador += 1
+            
+            if nodo_actual.get_hijo_izquierdo() is not None:
+                cola.append(nodo_actual.get_hijo_izquierdo())
+            if nodo_actual.get_hijo_derecho() is not None:
+                cola.append(nodo_actual.get_hijo_derecho())
+                
+        return contador
+
+    # AMPLITUD (Recorrido por niveles) - Versión iterativa
+    def amplitud(self):
+        """Recorrido por niveles (BFS) - Solo versión iterativa"""
+        if self.es_vacio():
+            return []
+            
+        resultado = []
+        cola = deque([self.raiz])
+        
+        while cola:
+            nodo_actual = cola.popleft()
+            resultado.append(nodo_actual.get_valor())
+            
+            if nodo_actual.get_hijo_izquierdo() is not None:
+                cola.append(nodo_actual.get_hijo_izquierdo())
+            if nodo_actual.get_hijo_derecho() is not None:
+                cola.append(nodo_actual.get_hijo_derecho())
+                
+        return resultado
 
     # RECORRIDOS - Ambas versiones
     # IN-ORDEN
@@ -228,38 +317,7 @@ class ArbolBinario:
             
         return resultado
 
-    # MÉTODOS AUXILIARES
-    def contar_nodos_recursivo(self):
-        """Contar nodos recursivamente"""
-        return self._contar_nodos_recursivo(self.raiz)
-
-    def _contar_nodos_recursivo(self, nodo_actual):
-        if nodo_actual is None:
-            return 0
-        return (1 + 
-                self._contar_nodos_recursivo(nodo_actual.get_hijo_izquierdo()) + 
-                self._contar_nodos_recursivo(nodo_actual.get_hijo_derecho()))
-
-    def contar_nodos_iterativo(self):
-        """Contar nodos iterativamente usando BFS"""
-        if self.es_vacio():
-            return 0
-            
-        contador = 0
-        cola = [self.raiz]
-        
-        while cola:
-            actual = cola.pop(0)
-            contador += 1
-            
-            if actual.get_hijo_izquierdo() is not None:
-                cola.append(actual.get_hijo_izquierdo())
-            if actual.get_hijo_derecho() is not None:
-                cola.append(actual.get_hijo_derecho())
-                
-        return contador
-
-    # Métodos de conveniencia (pueden usar cualquier implementación)
+    # MÉTODOS DE CONVENIENCIA
     def insertar_nodo(self, valor, recursivo=True):
         """Método unificado de inserción"""
         if recursivo:
@@ -273,6 +331,27 @@ class ArbolBinario:
             return self.buscar_x_recursivo(valor)
         else:
             return self.buscar_x_iterativo(valor)
+
+    def es_hoja(self, valor, recursivo=True):
+        """Método unificado para verificar si un nodo es hoja"""
+        if recursivo:
+            return self.es_hoja_recursivo(valor)
+        else:
+            return self.es_hoja_iterativo(valor)
+
+    def altura(self, recursivo=True):
+        """Método unificado para calcular la altura"""
+        if recursivo:
+            return self.altura_recursivo()
+        else:
+            return self.altura_iterativo()
+
+    def cantidad_nodos(self, recursivo=True):
+        """Método unificado para contar nodos"""
+        if recursivo:
+            return self.cantidad_nodos_recursivo()
+        else:
+            return self.cantidad_nodos_iterativo()
 
     def in_orden(self, recursivo=True):
         """Método unificado de in-orden"""
