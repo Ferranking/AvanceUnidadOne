@@ -3,112 +3,377 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ data.title }}</title>
+    <title>Sistema de Delivery - Grafos</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
         .container {
-            display: flex;
-            flex-wrap: wrap;
-            width: 300px;
+            max-width: 800px;
             margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
-        .square {
-            width: 100px;
-            height: 100px;
-            border: 2px solid black;
-            font-size: 50px;
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
             text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .square:hover {
-            background-color: #ccc;
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
         }
 
-        .playerX {
-            color: blue;
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
         }
 
-        .playerO {
-            color: red;
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        #message {
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+
+        .result.success {
+            border-left-color: #27ae60;
+            background: #d5f4e6;
+        }
+
+        .result.error {
+            border-left-color: #e74c3c;
+            background: #fadbd8;
+        }
+
+        .result h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .path {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #e0e0e0;
+        }
+
+        .path-step {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            background: #3498db;
+            color: white;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .path-step.origin {
+            background: #e74c3c;
+        }
+
+        .path-step.start {
+            background: #f39c12;
+        }
+
+        .path-step.end {
+            background: #27ae60;
+        }
+
+        .distance {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
             text-align: center;
-            font-size: 20px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .graph-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
             margin-top: 20px;
+            font-size: 0.9em;
+            color: #7f8c8d;
         }
     </style>
 </head>
 <body>
-    <h1>{{ data.message }}</h1>
     <div class="container">
-        <div class="square" data-cell="0"></div>
-        <div class="square" data-cell="1"></div>
-        <div class="square" data-cell="2"></div>
-        <div class="square" data-cell="3"></div>
-        <div class="square" data-cell="4"></div>
-        <div class="square" data-cell="5"></div>
-        <div class="square" data-cell="6"></div>
-        <div class="square" data-cell="7"></div>
-        <div class="square" data-cell="8"></div>
+        <div class="header">
+            <h1> Sistema de Delivery</h1>
+            <p>Calcula la ruta más corta: Origen → Pizzería → Cliente</p>
+        </div>
+
+        <div class="content">
+            <div class="form-group">
+                <label for="origin"> Punto de Origen (Tu ubicación):</label>
+                <select id="origin">
+                    <option value="">Selecciona tu ubicación</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="start"> Punto de Recojo (Pizzería):</label>
+                <select id="start">
+                    <option value="">Selecciona la pizzería</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="end"> Punto de Entrega (Cliente):</label>
+                <select id="end">
+                    <option value="">Selecciona el cliente</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                 <button class="btn-secondary" onclick="loadGraph()"> Cargar Grafo </button>
+                <button class="btn-primary" onclick="calculateRoute()"> Calcular Ruta</button>
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <p>Calculando la mejor ruta...</p>
+            </div>
+
+            <div id="result"></div>
+
+          
+        </div>
     </div>
 
-    <div id="message"></div>
-
     <script>
-        const squares = document.querySelectorAll('.square');
-        const message = document.getElementById('message');
-
-        let currentPlayer = 'X';
-
-        squares.forEach(square => {
-            square.addEventListener('click', () => {
-                if (square.textContent === '') {
-                    square.textContent = currentPlayer;
-                    checkWinner();
-                    if (currentPlayer === 'X') {
-                        currentPlayer = 'O';
-                    } else {
-                        currentPlayer = 'X';
-                    }
-                }
-            });
+        // Cargar nodos disponibles cuando la página cargue
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAvailableNodes();
         });
 
-        function checkWinner() {
-            const winningConditions = [
-                [0, 1, 2],
-                [3, 4, 5],
-                [6, 7, 8],
-                [0, 3, 6],
-                [1, 4, 7],
-                [2, 5, 8],
-                [0, 4, 8],
-                [2, 4, 6]
-            ];
+        function loadAvailableNodes() {
+            fetch('/get_nodes')
+                .then(response => response.json())
+                .then(data => {
+                    const originSelect = document.getElementById('origin');
+                    const startSelect = document.getElementById('start');
+                    const endSelect = document.getElementById('end');
 
-            for (let i = 0; i < winningConditions.length; i++) {
-                const condition = winningConditions[i];
-                if (squares[condition[0]].textContent === currentPlayer &&
-                    squares[condition[1]].textContent === currentPlayer &&
-                    squares[condition[2]].textContent === currentPlayer) {
-                    message.textContent = `¡Ganó el jugador ${currentPlayer}!`;
-                    return;
-                }
+                    // Limpiar opciones existentes (excepto la primera)
+                    while (originSelect.children.length > 1) originSelect.removeChild(originSelect.lastChild);
+                    while (startSelect.children.length > 1) startSelect.removeChild(startSelect.lastChild);
+                    while (endSelect.children.length > 1) endSelect.removeChild(endSelect.lastChild);
+
+                    // Agregar nodos a cada select
+                    data.nodes.forEach(node => {
+                        const option1 = new Option(node, node);
+                        const option2 = new Option(node, node);
+                        const option3 = new Option(node, node);
+                        
+                        originSelect.add(option1);
+                        startSelect.add(option2);
+                        endSelect.add(option3);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showResult('Error al cargar los nodos disponibles', false);
+                });
+        }
+
+        function loadGraph() {
+            showResult('Grafo cargado exitosamente. Puedes calcular rutas.', true);
+        }
+
+        function calculateRoute() {
+            const origin = document.getElementById('origin').value;
+            const start = document.getElementById('start').value;
+            const end = document.getElementById('end').value;
+
+            if (!origin || !start || !end) {
+                showResult('Por favor, selecciona todos los puntos.', false);
+                return;
             }
 
-            let isDraw = true;
-            for (let i = 0; i < squares.length; i++) {
-                if (squares[i].textContent === '') {
-                    isDraw = false;
-                    break;
-                }
+            if (origin === start || origin === end || start === end) {
+                showResult('Los tres puntos deben ser diferentes.', false);
+                return;
             }
 
-            if (isDraw) {
-                message.textContent = '¡Empate!';
+            // Mostrar loading
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('result').innerHTML = '';
+
+            // Realizar petición al servidor
+            fetch('/calculate_route', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    origin: origin,
+                    start: start,
+                    end: end
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').classList.add('hidden');
+                displayResult(data);
+            })
+            .catch(error => {
+                document.getElementById('loading').classList.add('hidden');
+                console.error('Error:', error);
+                showResult('Error al calcular la ruta', false);
+            });
+        }
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            
+            if (data.success) {
+                let html = `
+                    <div class="result success">
+                        <h3> Ruta Calculada Exitosamente</h3>
+                        <div class="path">
+                            <strong>Ruta completa:</strong><br>
+                `;
+                
+                // Mostrar cada paso del camino con colores diferentes
+                data.full_path.forEach((node, index) => {
+                    let stepClass = '';
+                    if (node === data.path_origin_to_start[0]) {
+                        stepClass = 'origin';
+                    } else if (node === data.path_start_to_end[0]) {
+                        stepClass = 'start';
+                    } else if (node === data.path_start_to_end[data.path_start_to_end.length - 1]) {
+                        stepClass = 'end';
+                    }
+                    
+                    html += `<span class="path-step ${stepClass}">${node}</span>`;
+                    if (index < data.full_path.length - 1) {
+                        html += ' → ';
+                    }
+                });
+                
+                html += `
+                        </div>
+                        <div class="distance">
+                             Distancia total: <strong>${data.total_distance} unidades</strong>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <strong>Desglose:</strong><br>
+                            •  ${data.path_origin_to_start.join(' → ')}<br>
+                            •  ${data.path_start_to_end.join(' → ')}
+                        </div>
+                    </div>
+                `;
+                
+                resultDiv.innerHTML = html;
+            } else {
+                showResult(` Error: ${data.error}`, false);
             }
+        }
+
+        function showResult(message, isSuccess) {
+            const resultDiv = document.getElementById('result');
+            const className = isSuccess ? 'success' : 'error';
+            resultDiv.innerHTML = `
+                <div class="result ${className}">
+                    <h3>${isSuccess ? ' Éxito' : ' Error'}</h3>
+                    <p>${message}</p>
+                </div>
+            `;
         }
     </script>
 </body>
